@@ -24,6 +24,21 @@
 		regulator-boot-on;
 	};
 */
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		ramoops@ac000000 {
+			compatible = "ramoops";
+			reg = <0 0xac000000 0 0x200000>;
+			console-size = <0x80000>;
+			ftrace-size = <0x20000>;
+			record-size = <0x8000>;
+			pmsg-size = <0x40000>;
+		};
+	};
 };
 
 &blsp1_uart3 {

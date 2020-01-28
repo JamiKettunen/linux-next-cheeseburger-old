@@ -16,12 +16,14 @@
 		stdout-path = "serial0:115200n8";
 	};
 
+/*
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "vph_pwr";
 		regulator-always-on;
 		regulator-boot-on;
 	};
+*/
 };
 
 &blsp1_uart3 {
@@ -103,20 +105,26 @@
 };
 
 &pm8005_lsid1 {
+/*
 	pm8005-regulators {
 		compatible = "qcom,pm8005-regulators";
 
 		vdd_s1-supply = <&vph_pwr>;
+*/
 
-		pm8005_s1: s1 { /* VDD_GFX supply */
+//		pm8005_s1: s1 { /* VDD_GFX supply */
+/*
 			regulator-min-microvolt = <524000>;
 			regulator-max-microvolt = <1100000>;
 			regulator-enable-ramp-delay = <500>;
+*/
 
 			/* hack until we rig up the gpu consumer */
+/*
 			regulator-always-on;
 		};
 	};
+*/
 };
 
 &qusb2phy {
@@ -131,6 +139,7 @@
 };
 
 &rpm_requests {
+/*
 	pm8998-regulators {
 		compatible = "qcom,rpm-pm8998-regulators";
 
@@ -299,7 +308,9 @@
 		};
 
 	};
+*/
 
+/*
 	pmi8998-regulators {
 		compatible = "qcom,rpm-pmi8998-regulators";
 
@@ -310,6 +321,7 @@
 			regulator-max-microvolt = <3600000>;
 		};
 	};
+*/
 };
 
 &remoteproc_adsp {

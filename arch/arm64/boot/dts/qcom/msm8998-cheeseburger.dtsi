@@ -32,10 +32,10 @@
 	bluetooth {
 		compatible = "qcom,wcn3990-bt";
 
-		vddio-supply = <&vreg_s4a_1p8>;
-		vddxo-supply = <&vreg_l7a_1p8>;
-		vddrf-supply = <&vreg_l17a_1p3>;
-		vddch0-supply = <&vreg_l25a_3p3>;
+		//vddio-supply = <&vreg_s4a_1p8>;
+		//vddxo-supply = <&vreg_l7a_1p8>;
+		//vddrf-supply = <&vreg_l17a_1p3>;
+		//vddch0-supply = <&vreg_l25a_3p3>;
 		max-speed = <3200000>;
 	};
 };
@@ -130,8 +130,8 @@
 &qusb2phy {
 	status = "okay";
 
-	vdda-pll-supply = <&vreg_l12a_1p8>;
-	vdda-phy-dpdm-supply = <&vreg_l24a_3p075>;
+	//vdda-pll-supply = <&vreg_l12a_1p8>;
+	//vdda-phy-dpdm-supply = <&vreg_l24a_3p075>;
 };
 
 &replicator1 {
@@ -340,8 +340,8 @@
 	status = "okay";
 	cd-gpios = <&tlmm 95 GPIO_ACTIVE_LOW>;
 
-	vmmc-supply = <&vreg_l21a_2p95>;
-	vqmmc-supply = <&vreg_l13a_2p95>;
+	//vmmc-supply = <&vreg_l21a_2p95>;
+	//vqmmc-supply = <&vreg_l13a_2p95>;
 
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&sdc2_clk_on  &sdc2_cmd_on  &sdc2_data_on  &sdc2_cd_on>;
@@ -353,18 +353,18 @@
 };
 
 &ufshc {
-	vcc-supply = <&vreg_l20a_2p95>;
-	vccq-supply = <&vreg_l26a_1p2>;
-	vccq2-supply = <&vreg_s4a_1p8>;
+	//vcc-supply = <&vreg_l20a_2p95>;
+	//vccq-supply = <&vreg_l26a_1p2>;
+	//vccq2-supply = <&vreg_s4a_1p8>;
 	vcc-max-microamp = <750000>;
 	vccq-max-microamp = <560000>;
 	vccq2-max-microamp = <750000>;
 };
 
 &ufsphy {
-	vdda-phy-supply = <&vreg_l1a_0p875>;
-	vdda-pll-supply = <&vreg_l2a_1p2>;
-	vddp-ref-clk-supply = <&vreg_l26a_1p2>;
+	//vdda-phy-supply = <&vreg_l1a_0p875>;
+	//vdda-pll-supply = <&vreg_l2a_1p2>;
+	//vddp-ref-clk-supply = <&vreg_l26a_1p2>;
 	vdda-phy-max-microamp = <51400>;
 	vdda-pll-max-microamp = <14600>;
 	vddp-ref-clk-max-microamp = <100>;
@@ -382,17 +382,17 @@
 &usb3phy {
 	status = "okay";
 
-	vdda-phy-supply = <&vreg_l1a_0p875>;
-	vdda-pll-supply = <&vreg_l2a_1p2>;
+	//vdda-phy-supply = <&vreg_l1a_0p875>;
+	//vdda-pll-supply = <&vreg_l2a_1p2>;
 };
 
 &wifi {
 	status = "okay";
 
-	vdd-0.8-cx-mx-supply = <&vreg_l5a_0p8>;
-	vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
-	vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
-	vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
+	//vdd-0.8-cx-mx-supply = <&vreg_l5a_0p8>;
+	//vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
+	//vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
+	//vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
 };
 
 /* PINCTRL - board-specific pinctrl */

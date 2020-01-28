@@ -3,11 +3,11 @@
 
 /dts-v1/;
 
-#include "msm8998-mtp.dtsi"
+#include "msm8998-cheeseburger.dtsi"
 
 / {
-	model = "Qualcomm Technologies, Inc. MSM8998 v1 MTP";
-	compatible = "qcom,msm8998-mtp";
+	model = "Qualcomm Technologies, Inc. MSM 8998 v2.1 MTP";
+	compatible = "qcom,msm8998-mtp", "qcom,msm8998", "qcom,mtp";
 
-	qcom,board-id = <8 0>;
+	qcom,board-id = <8 0 16859 23>;
 };

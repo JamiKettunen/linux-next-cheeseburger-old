@@ -10,10 +10,30 @@
 	aliases {
 		serial0 = &blsp2_uart1;
 		serial1 = &blsp1_uart3;
+		display0 = &framebuffer0;
 	};
 
 	chosen {
-		stdout-path = "serial0:115200n8";
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		//stdout-path = "serial0:115200n8";
+		stdout-path = "display0";
+
+		/*
+		 * hack: Use framebuffer setup by the bootloader.
+		 * the address is taken from the bootloader config (strings xbl.img | grep "Display Reserved")
+		 */
+		framebuffer0: framebuffer@9d400000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0x9d400000 0 0x1043000>;
+			width = <1080>;
+			height = <1920>;
+			stride = <(1080 * 4)>;
+			format = "a8r8g8b8";
+			status = "okay";
+		};
 	};
 
 /*
@@ -37,6 +57,13 @@
 			ftrace-size = <0x20000>;
 			record-size = <0x8000>;
 			pmsg-size = <0x40000>;
+		};
+
+		/* hack: Bootloader framebuffer */
+		bootloader_framebuffer_mem: bootloader_framebuffer_region@a1a10000 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x9d400000 0 0x1043000>;
 		};
 	};
 

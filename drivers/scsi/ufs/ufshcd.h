@@ -56,7 +56,6 @@
 #include <linux/completion.h>
 #include <linux/regulator/consumer.h>
 #include <linux/bitfield.h>
-#include <linux/devfreq.h>
 #include "unipro.h"
 
 #include <asm/irq.h>
@@ -343,9 +342,6 @@ struct ufs_hba_variant_ops {
 	void	(*dbg_register_dump)(struct ufs_hba *hba);
 	int	(*phy_initialization)(struct ufs_hba *);
 	void	(*device_reset)(struct ufs_hba *hba);
-	void	(*config_scaling_param)(struct ufs_hba *hba,
-					struct devfreq_dev_profile *profile,
-					void *data);
 };
 
 /* clock gating state  */
@@ -566,13 +562,6 @@ enum ufshcd_caps {
 	UFSHCD_CAP_WB_EN				= 1 << 7,
 };
 
-struct ufs_hba_variant_params {
-	struct devfreq_dev_profile devfreq_profile;
-	struct devfreq_simple_ondemand_data ondemand_data;
-	u16 hba_enable_delay_us;
-	u32 wb_flush_threshold;
-};
-
 /**
  * struct ufs_hba - per adapter private structure
  * @mmio_base: UFSHCI base register address
@@ -670,7 +659,6 @@ struct ufs_hba {
 	int nutmrs;
 	u32 ufs_version;
 	const struct ufs_hba_variant_ops *vops;
-	struct ufs_hba_variant_params *vps;
 	void *priv;
 	unsigned int irq;
 	bool is_irq_enabled;
@@ -692,6 +680,7 @@ struct ufs_hba {
 	u32 eh_flags;
 	u32 intr_mask;
 	u16 ee_ctrl_mask;
+	u16 hba_enable_delay_us;
 	bool is_powered;
 
 	/* Work Queues */
@@ -1136,14 +1125,6 @@ static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
 		ufshcd_set_ufs_dev_active(hba);
 		ufshcd_update_reg_hist(&hba->ufs_stats.dev_reset, 0);
 	}
-}
-
-static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
-						    struct devfreq_dev_profile
-						    *profile, void *data)
-{
-	if (hba->vops && hba->vops->config_scaling_param)
-		hba->vops->config_scaling_param(hba, profile, data);
 }
 
 extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];

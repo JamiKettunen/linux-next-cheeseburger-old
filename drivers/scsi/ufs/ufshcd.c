@@ -1240,9 +1240,6 @@ static int ufshcd_devfreq_target(struct device *dev,
 	if (!ufshcd_is_clkscaling_supported(hba))
 		return -EINVAL;
 
-	clki = list_first_entry(&hba->clk_list_head, struct ufs_clk_info, list);
-	/* Override with the closest supported frequency */
-	*freq = (unsigned long) clk_round_rate(clki->clk, *freq);
 	spin_lock_irqsave(hba->host->host_lock, irq_flags);
 	if (ufshcd_eh_in_progress(hba)) {
 		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
@@ -1257,11 +1254,8 @@ static int ufshcd_devfreq_target(struct device *dev,
 		goto out;
 	}
 
-	/* Decide based on the rounded-off frequency and update */
+	clki = list_first_entry(&hba->clk_list_head, struct ufs_clk_info, list);
 	scale_up = (*freq == clki->max_freq) ? true : false;
-	if (!scale_up)
-		*freq = clki->min_freq;
-	/* Update the frequency */
 	if (!ufshcd_is_devfreq_scaling_required(hba, scale_up)) {
 		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
 		ret = 0;
@@ -1309,8 +1303,6 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
 	struct ufs_hba *hba = dev_get_drvdata(dev);
 	struct ufs_clk_scaling *scaling = &hba->clk_scaling;
 	unsigned long flags;
-	struct list_head *clk_list = &hba->clk_list_head;
-	struct ufs_clk_info *clki;
 
 	if (!ufshcd_is_clkscaling_supported(hba))
 		return -EINVAL;
@@ -1321,13 +1313,6 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
 	if (!scaling->window_start_t)
 		goto start_window;
 
-	clki = list_first_entry(clk_list, struct ufs_clk_info, list);
-	/*
-	 * If current frequency is 0, then the ondemand governor considers
-	 * there's no initial frequency set. And it always requests to set
-	 * to max. frequency.
-	 */
-	stat->current_frequency = clki->curr_freq;
 	if (scaling->is_busy_started)
 		scaling->tot_busy_t += ktime_to_us(ktime_sub(ktime_get(),
 					scaling->busy_start_t));
@@ -1350,6 +1335,12 @@ start_window:
 	return 0;
 }
 
+static struct devfreq_dev_profile ufs_devfreq_profile = {
+	.polling_ms	= 100,
+	.target		= ufshcd_devfreq_target,
+	.get_dev_status	= ufshcd_devfreq_get_dev_status,
+};
+
 static int ufshcd_devfreq_init(struct ufs_hba *hba)
 {
 	struct list_head *clk_list = &hba->clk_list_head;
@@ -1365,12 +1356,10 @@ static int ufshcd_devfreq_init(struct ufs_hba *hba)
 	dev_pm_opp_add(hba->dev, clki->min_freq, 0);
 	dev_pm_opp_add(hba->dev, clki->max_freq, 0);
 
-	ufshcd_vops_config_scaling_param(hba, &hba->vps->devfreq_profile,
-					 &hba->vps->ondemand_data);
 	devfreq = devfreq_add_device(hba->dev,
-			&hba->vps->devfreq_profile,
+			&ufs_devfreq_profile,
 			DEVFREQ_GOV_SIMPLE_ONDEMAND,
-			&hba->vps->ondemand_data);
+			NULL);
 	if (IS_ERR(devfreq)) {
 		ret = PTR_ERR(devfreq);
 		dev_err(hba->dev, "Unable to register with devfreq %d\n", ret);
@@ -4301,7 +4290,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
 	 * instruction might be read back.
 	 * This delay can be changed based on the controller.
 	 */
-	ufshcd_delay_us(hba->vps->hba_enable_delay_us, 100);
+	ufshcd_delay_us(hba->hba_enable_delay_us, 100);
 
 	/* wait for the host controller to complete initialization */
 	retry = 50;
@@ -5305,8 +5294,8 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
 			 cur_buf);
 		return false;
 	}
-	/* Let it continue to flush when available buffer exceeds threshold */
-	if (avail_buf < hba->vps->wb_flush_threshold)
+	/* Let it continue to flush when >60% full */
+	if (avail_buf < UFS_WB_40_PERCENT_BUF_REMAIN)
 		return true;
 
 	return false;
@@ -5340,7 +5329,7 @@ static bool ufshcd_wb_keep_vcc_on(struct ufs_hba *hba)
 	}
 
 	if (!hba->dev_info.b_presrv_uspc_en) {
-		if (avail_buf <= UFS_WB_BUF_REMAIN_PERCENT(10))
+		if (avail_buf <= UFS_WB_10_PERCENT_BUF_REMAIN)
 			return true;
 		return false;
 	}
@@ -7465,16 +7454,6 @@ static const struct attribute_group *ufshcd_driver_groups[] = {
 	NULL,
 };
 
-static struct ufs_hba_variant_params ufs_hba_vps = {
-	.hba_enable_delay_us		= 1000,
-	.wb_flush_threshold		= UFS_WB_BUF_REMAIN_PERCENT(40),
-	.devfreq_profile.polling_ms	= 100,
-	.devfreq_profile.target		= ufshcd_devfreq_target,
-	.devfreq_profile.get_dev_status	= ufshcd_devfreq_get_dev_status,
-	.ondemand_data.upthreshold	= 70,
-	.ondemand_data.downdifferential	= 5,
-};
-
 static struct scsi_host_template ufshcd_driver_template = {
 	.module			= THIS_MODULE,
 	.name			= UFSHCD,
@@ -8722,7 +8701,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 
 	hba->mmio_base = mmio_base;
 	hba->irq = irq;
-	hba->vps = &ufs_hba_vps;
+	hba->hba_enable_delay_us = 1000;
 
 	err = ufshcd_hba_init(hba);
 	if (err)
